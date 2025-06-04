@@ -1,6 +1,8 @@
 import Fastify from 'fastify';
 import {redis} from './redis';
 import { processNotification } from './processor';
+import httpClient from './httpClient';
+import { error } from 'console';
 
 const fastify = Fastify();
 
@@ -25,6 +27,26 @@ redis.on('message',async(channel,message)=>{
 
 fastify.get('/',async()=>{
     return {status: 'Node microservice running'};
+});
+
+fastify.get('/recent',async()=>{
+    try{
+        const response = await httpClient.get('/notifications/recent');
+        return response.data;
+    }catch(err){
+        console.error('Error fetching recent notifications:',err);
+        return {error: 'Failed to fetch recent notifications',err};
+    }
+});
+
+fastify.get('/summary', async()=>{
+    try{
+        const response = await httpClient.get('/notifications/summary');
+        return response.data;
+    }catch(err){
+        console.error('Error fetching summary:',err);
+        return {error: `Failed to fetch summary ${err}`};
+    }
 });
 
 fastify.listen({port:3001},(err)=>{
